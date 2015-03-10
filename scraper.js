@@ -22,18 +22,20 @@ function photoRequest(hostUrl, photoSrc, photoDir) {
         var photoName = url.parse(photoUrl).pathname.split('/').pop().split('?').shift(); // parse URL into pieces to be manipulated. pathname is portion of URL that comes after host (ex. /assets/img/image.jpg). split that on '/' and pop last item off array which will be 'photo.jpg'
         
         // using curl we have to escape '&' from photoUrl
-        if ( ! fs.existsSync(photoDir + photoName) ) { // don't write file if we already have it. this is bad practice ( vulnerable to race conditions and is also being deprecated ) and we should really be using fs.open()
-            
-            var curl = 'curl ' + photoUrl.replace(/&/g, '\\&') + ' -o ' + photoDir + photoName + ' --create-dirs'; // curl is used to make request and download files. we start the command with curl and add to it the escaping of all ampersands (&) in photoUrl query string, which is vital for authorization. without this it will fail as an unauthorized request. '-o' tells curl to write the data to a file. 'photoDir+photoName' tells curl to save the file with the defined name within our downloads directory. ' --create-dirs' forces curl to create the download directory if it doesn't already exist.
-            var child = exec(curl, function (error, stdout, stderr) { // 'Exec' will run the command string we just defined, and give a callback for errors and outputs useful for debugging. Log filenames and download location as a reference.
-                
-                if (error) { console.log(stderr); throw error; }
-                else { console.log(photoName + ' downloaded to ' + photoDir); }
-            
-            });
+        fs.exists(photoDir + photoName, function (exists) { // this may be bad practice ( vulnerable to race conditions )
 
-        } else { console.log("Already have " + photoName + " in " + photoDir); }
-   
+            if ( ! exists ) { // write file if it doesn't exist.
+            
+                var curl = 'curl ' + photoUrl.replace(/&/g, '\\&') + ' -o ' + photoDir + photoName + ' --create-dirs'; // curl is used to make request and download files. we start the command with curl and add to it the escaping of all ampersands (&) in photoUrl query string, which is vital for authorization. without this it will fail as an unauthorized request. '-o' tells curl to write the data to a file. 'photoDir+photoName' tells curl to save the file with the defined name within our downloads directory. ' --create-dirs' forces curl to create the download directory if it doesn't already exist.
+                var child = exec(curl, function (error, stdout, stderr) { // 'Exec' will run the command string we just defined, and give a callback for errors and outputs useful for debugging. Log filenames and download location as a reference.
+                    
+                    if (error) { console.log(stderr); throw error; }
+                    else { console.log(photoName + ' downloaded to ' + photoDir); }
+                
+                });
+
+            } else { console.log("Already have " + photoName + " in " + photoDir); } // don't write file. we already have it.
+        })
     })
 } // end photoRequest function declaration
 
