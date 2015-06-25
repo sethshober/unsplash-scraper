@@ -21,6 +21,10 @@ function photoRequest(hostUrl, photoSrc, photoDir) {
         var photoUrl = response.request.uri.href; // find redirected image location
         var photoName = url.parse(photoUrl).pathname.split('/').pop().split('?').shift(); // parse URL into pieces to be manipulated. pathname is portion of URL that comes after host (ex. /assets/img/image.jpg). split that on '/' and pop last item off array which will be 'photo.jpg'
         
+        console.log(photoName.indexOf('.'));
+
+        if ( photoName.indexOf('.') === -1 ) { photoName = photoName.concat('.jpg'); } // if no extension add jpg
+
         // using curl we have to escape '&' from photoUrl
         fs.exists(photoDir + photoName, function (exists) { // this may be bad practice ( vulnerable to race conditions )
 
